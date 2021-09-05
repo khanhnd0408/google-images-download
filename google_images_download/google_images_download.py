@@ -43,7 +43,7 @@ args_list = ["keywords", "keywords_from_file", "prefix_keywords", "suffix_keywor
              "output_directory", "image_directory", "no_directory", "proxy", "similar_images", "specific_site",
              "print_urls", "print_size", "print_paths", "metadata", "extract_metadata", "socket_timeout",
              "thumbnail", "thumbnail_only", "language", "prefix", "chromedriver", "related_images", "safe_search",
-             "no_numbering",
+             "no_numbering", "show_other_result",
              "offset", "no_download", "save_source", "silent_mode", "ignore_urls"]
 
 
@@ -193,7 +193,7 @@ class googleimagesdownload:
 
     def _extract_data_pack_ajax(self, data):
         lines = data.split('\n')
-        return json.loads(lines[3] + lines[4])[0][2]
+        return json.loads(lines[3])[0][2]
 
     def _image_objects_from_pack(self, data):
         image_objects = json.loads(data)[31][0][12][2]
@@ -238,7 +238,7 @@ class googleimagesdownload:
             sys.exit()
 
     # Download Page for more than 100 images
-    def download_extended_page(self, url, chromedriver):
+    def download_extended_page(self, url, chromedriver, show_other_result=""):
         from selenium import webdriver
         from selenium.webdriver.common.keys import Keys
         if sys.version_info[0] < 3:
@@ -295,9 +295,21 @@ class googleimagesdownload:
         for i in range(30):
             element.send_keys(Keys.PAGE_DOWN)
             time.sleep(0.3)
+        if show_other_result == "":
+            pass
+        else:
+            try:
+                # will take a couple of seconds to find the load other result buttons
+                browser.find_element_by_class_name(show_other_result).click()
+                for i in range(20):
+                    element.send_keys(Keys.PAGE_DOWN)
+                    time.sleep(0.3)
+            except:
+                pass
 
         try:
-            browser.find_element_by_id("smb").click()
+            # browser.find_element_by_id("smb").click()
+            browser.find_element_by_xpath('//input[@value="Show more results"]').click()
             for i in range(50):
                 element.send_keys(Keys.PAGE_DOWN)
                 time.sleep(0.3)  # bot id protection
@@ -1082,7 +1094,7 @@ class googleimagesdownload:
                     if limit < 101:
                         images, tabs = self.download_page(url)  # download page
                     else:
-                        images, tabs = self.download_extended_page(url, arguments['chromedriver'])
+                        images, tabs = self.download_extended_page(url, arguments['chromedriver'], arguments["show_other_result"])
 
                     if not arguments["silent_mode"]:
                         if arguments['no_download']:
